@@ -1,6 +1,9 @@
+## transports
+可以通过很多种方式将日志信息输出到不同的地方。例如mongodb、文件、控制台等。
+
 ```shell
 npm install --save winston
-npm install --save winston-daily-rotate-file
+npm install --save winston-daily-rotate-file // 按照日期切割储存日志
 ```
 ```typescript
 import winston from 'winston';
@@ -60,3 +63,99 @@ logger.remove(console);
 logger.add(file);
 ```
 
+# 项目集成winston
+## 集成前
+```typescript
+// MyLogger.ts
+import { LoggerService, LogLevel } from '@nestjs/common';
+
+export class MyLogger implements LoggerService {
+    log(message: string, context: string) {
+        console.log(`---log---[${context}]---`, message)
+    }
+
+    error(message: string, context: string) {
+        console.log(`---error---[${context}]---`, message)
+    }
+
+    warn(message: string, context: string) {
+        console.log(`---warn---[${context}]---`, message)
+    }
+}
+
+// main.ts
+function bootstrap() {
+    const app = await NestFactory.create(AppModule);
+    app.useLogger(app.get(MyLogger));
+    await app.listen(3000);
+}
+bootstrap();
+
+// app.controller.ts
+import { Logger } from '@nestjs/common'
+@Controller()
+export class AppController {
+    private logger = new Logger()
+    @Get()
+    hello() {
+        this.logger.log('hello world')
+    }
+}
+```
+
+## 集成后
+```typescript
+// MyLogger.ts
+import { ConsoleLogger, LoggerService, LogLevel } from '@nestjs/common';
+import * as chalk from 'chalk'; // 打印颜色
+import * as dayjs from 'dayjs';
+import { createLogger, format, Logger, transports } from 'winston';
+
+export class MyLogger implements LoggerService {
+
+    private logger: Logger;
+
+    constructor() {
+        super();
+    
+        this.logger = createLogger({
+            level: 'debug',
+            transports: [
+                new transports.Console({
+                    format: format.combine(
+                        format.colorize(),
+                        format.printf(({context, level, message, time}) => { // 自定义日志格式
+                            const appStr = chalk.green(`[NEST]`);
+                            const contextStr = chalk.yellow(`[${context}]`);
+        
+                            return `${appStr} ${time} ${level} ${contextStr} ${message} `;
+                        })
+                    ),
+                })
+            ]
+        });
+    }
+
+    log(message: string, context: string) {
+        const time = dayjs(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+
+        this.logger.log('info', message, { context, time });
+    }
+
+    error(message: string, context: string) {
+        const time = dayjs(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+
+        this.logger.log('info', message, { context, time });
+    }
+
+    warn(message: string, context: string) {
+        const time = dayjs(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+
+        this.logger.log('info', message, { context, time });
+    }
+}
+
+
+```
+
+## 可以将logger封装成一个module，在appModule引入，就不用每次都new了。
