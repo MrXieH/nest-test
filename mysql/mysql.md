@@ -32,3 +32,16 @@
 - SET NULL（关联外键设置为 null）
 - RESTRICT 或者 NO ACTION（没有从表的关联记录才可以删除或更新）
 
+## 嵌套查询
+
+- EXISTS 存在于, NOT EXISTS 不存在于，可用于增删改查
+```sql
+-- 嵌套查询
+SELECT name, class FROM student WHERE score = (SELECT MAX(score) FROM student);
+
+-- EXISTS
+SELECT name FROM department
+    WHERE EXISTS (
+        SELECT * FROM employee WHERE department.id = employee.department_id
+    );
+```
