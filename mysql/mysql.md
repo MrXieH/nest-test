@@ -9,6 +9,8 @@
 - group by：分组，比如 group by aaa
 - having：分组之后再过滤，比如 group by aaa having xxx > 5
 - distinct：去重
+- like: 模糊查询，比如 where name like '%a%'
+- union：合并两个查询结果，比如 select a from table1 union select b from table2
 
 ## 函数
 - 聚合函数：avg、count、sum、min、max
