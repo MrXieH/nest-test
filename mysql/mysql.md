@@ -47,3 +47,23 @@ SELECT name FROM department
         SELECT * FROM employee WHERE department.id = employee.department_id
     );
 ```
+
+## 事务
+```bash
+START TRANSACTION; #开启事务
+
+SAVEPOINT aaa; #保存回滚点
+
+ROLLBACK TO SAVEPOINT; #回滚至某个点
+
+ROLLBACK; # 回滚所有
+
+COMMIT; # 提交事务
+```
+
+事务隔离：性能从高到低
+- Read Uncommitted(读取未提交内容)，问题：产生脏读（读取了未提交的数据）
+- Read Committed(读取提交内容)，问题：不可重复读（同一行数据被不同事务修改导致读取结果不一致）
+- Repeatable Read(可重读) 默认隔离级别。通过一致性视图（snapshot）来解决不可重复度问题，新问题：幻读（因为其他事务插入或删除数据导致结果集中记录的数量变化）
+- Serializable(串行化) 在同一时间只允许一个事务修改数据，可靠性高，性能低
+
